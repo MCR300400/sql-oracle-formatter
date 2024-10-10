@@ -4,13 +4,17 @@
     <form @submit.prevent="sendEmail">
       <div>
         <label for="to">Destinatario:</label>
-        <input type="email" v-model="to" id="to" placeholder="Inserisci email destinatario" required/>
+        <input type="email" v-model="to" id="to" placeholder="Inserisci email destinatario" required />
       </div>
 
       <button type="submit">Invia</button>
     </form>
   </div>
 </template>
+<script setup lang="ts">
+</script>
+
+
 
 <script>
 import {sendEmailStore} from '@/stores/EmailStore.js';

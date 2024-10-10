@@ -1,12 +1,22 @@
 // ColonneStore.js
 import axios from 'axios';
+import PopUpStore from "@/stores/PopUpStore";
 
 
 /**
- * 
- *          MYSQL 
- *  
+ *
+ *          MYSQL
+ *
  */
+
+const DB_ERROR = 'Si è verificato un errore durante la connessione al DB.';
+const JOIN_ERROR = 'Si è verificato un errore durante la connessione al DB per il JOIN.';
+const CONNECTION_SUCCESSFUL = "Connessione eseguita con successo";
+const SUCCESS = "Successful";
+const ERROR = "Error";
+const GREEN = "#42b983";
+const RED = "#e04e39"
+
 
 export async function loadColumns(connectionDetails) {
     try {
@@ -15,24 +25,22 @@ export async function loadColumns(connectionDetails) {
                 'Content-Type': 'application/json'
             }
         });
-        
+
 
         // Check if the response is OK (HTTP status code in the range 200-299)
         if (response.status >= 200 && response.status < 300) {
             console.log(response.data);
             // Save the columns in localStorage
             localStorage.setItem('availableColumns', JSON.stringify(response.data));
+            PopUpStore.showPopup(GREEN, SUCCESS, CONNECTION_SUCCESSFUL);
             return response.data; // Return the columns
         } else {
-            throw new Error('Errore nel caricamento delle colonne: Risposta non valida');
+            PopUpStore.showPopup(RED, ERROR, DB_ERROR)
         }
     } catch (error) {
-        // Error handling
-        throw new Error('Errore nel caricamento delle colonne: ' + error.message);
+        PopUpStore.showPopup(RED, ERROR, DB_ERROR)
     }
 }
-
-
 
 
 export async function loadColumnsTipo(connectionDetails) {
@@ -52,12 +60,9 @@ export async function loadColumnsTipo(connectionDetails) {
             console.log(JSON.stringify(response.data));
             console.log(response.data);
             return response.data; // Return the columns
-        } else {
-            throw new Error('Errore nel caricamento delle colonne tipo: Risposta non valida');
         }
-    } catch (error) {
-        // Error handling
-        throw new Error('Errore nel caricamento delle colonne tipo: ' + error.message);
+    } catch (e) {
+        console.log(e);
     }
 }
 
@@ -79,15 +84,11 @@ export async function loadColumnsNull(connectionDetails) {
             console.log(JSON.stringify(response.data));
             console.log(response.data);
             return response.data; // Return the columns
-        } else {
-            throw new Error('Errore nel caricamento delle colonne null: Risposta non valida');
         }
-    } catch (error) {
-        // Error handling
-        throw new Error('Errore nel caricamento delle colonne null: ' + error.message);
+    } catch (e) {
+        console.log(e);
     }
 }
-
 
 
 export async function loadColumnsKey(connectionDetails) {
@@ -107,12 +108,9 @@ export async function loadColumnsKey(connectionDetails) {
             console.log(JSON.stringify(response.data));
             console.log(response.data);
             return response.data; // Return the columns
-        } else {
-            throw new Error('Errore nel caricamento delle colonne key : Risposta non valida');
         }
-    } catch (error) {
-        // Error handling
-        throw new Error('Errore nel caricamento delle colonne key: ' + error.message);
+    } catch (e) {
+        console.log(e);
     }
 }
 
@@ -134,15 +132,11 @@ export async function loadColumnsDefault(connectionDetails) {
             console.log(JSON.stringify(response.data));
             console.log(response.data);
             return response.data; // Return the columns
-        } else {
-            throw new Error('Errore nel caricamento delle colonne default: Risposta non valida');
         }
-    } catch (error) {
-        // Error handling
-        throw new Error('Errore nel caricamento delle colonne default: ' + error.message);
+    } catch (e) {
+        console.log(e);
     }
 }
-
 
 
 export async function loadColumnsExtra(connectionDetails) {
@@ -162,16 +156,11 @@ export async function loadColumnsExtra(connectionDetails) {
             console.log(JSON.stringify(response.data));
             console.log(response.data);
             return response.data; // Return the columns
-        } else {
-            throw new Error('Errore nel caricamento delle colonne extra: Risposta non valida');
         }
-    } catch (error) {
-        // Error handling
-        throw new Error('Errore nel caricamento delle colonne extra: ' + error.message);
+    } catch (e) {
+        console.log(e);
     }
 }
-
-
 
 
 export async function loadColumnsJoin(connectionDetails) {
@@ -188,23 +177,22 @@ export async function loadColumnsJoin(connectionDetails) {
             console.log(response.data);
             // Save the columns in localStorage
             localStorage.setItem('availableColumnsJoin', JSON.stringify(response.data));
+            PopUpStore.showPopup(GREEN, SUCCESS, CONNECTION_SUCCESSFUL);
+
             return response.data; // Return the columns
         } else {
-            throw new Error('Errore nel caricamento delle colonne: Risposta non valida');
+            PopUpStore.showPopup(RED, ERROR, JOIN_ERROR)
         }
     } catch (error) {
-        // Error handling
-        throw new Error('Errore nel caricamento delle colonne: ' + error.message);
+        PopUpStore.showPopup(RED, ERROR, JOIN_ERROR)
     }
 }
 
 
-
-
 /**
- * 
- *          MYSQL 
- *  
+ *
+ *          MYSQL
+ *
  */
 
 
@@ -216,23 +204,22 @@ export async function loadColumnsOracle(connectionDetails) {
                 'Content-Type': 'application/json'
             }
         });
-        
+
 
         // Check if the response is OK (HTTP status code in the range 200-299)
         if (response.status >= 200 && response.status < 300) {
             console.log(response.data);
             // Save the columns in localStorage
             localStorage.setItem('availableColumnsOracle', JSON.stringify(response.data));
+            PopUpStore.showPopup(GREEN, SUCCESS, CONNECTION_SUCCESSFUL);
             return response.data; // Return the columns
         } else {
-            throw new Error('Errore nel caricamento delle colonne: Risposta non valida');
+            PopUpStore.showPopup(RED, ERROR, 'Si è verificato un errore durante la connessione al DB.')
         }
     } catch (error) {
-        // Error handling
-        throw new Error('Errore nel caricamento delle colonne: ' + error.message);
+        PopUpStore.showPopup(RED, ERROR, 'Si è verificato un errore durante la connessione al DB.')
     }
 }
-
 
 
 export async function loadColumnsTipoOracle(connectionDetails) {
@@ -249,13 +236,11 @@ export async function loadColumnsTipoOracle(connectionDetails) {
             // Save the columns in localStorage
             localStorage.setItem('tipoOracle', JSON.stringify(response.data));
             return response.data; // Return the columns
-        } else {
-            throw new Error('Errore nel caricamento delle colonne tipo: Risposta non valida');
         }
-    } catch (error) {
-        // Error handling
-        throw new Error('Errore nel caricamento delle colonne tipo: ' + error.message);
+    } catch (e) {
+        console.log(e);
     }
+
 }
 
 
@@ -273,15 +258,11 @@ export async function loadColumnsNullOracle(connectionDetails) {
             // Save the columns in localStorage
             localStorage.setItem('nullOracle', JSON.stringify(response.data));
             return response.data; // Return the columns
-        } else {
-            throw new Error('Errore nel caricamento delle colonne null: Risposta non valida');
         }
-    } catch (error) {
-        // Error handling
-        throw new Error('Errore nel caricamento delle colonne null: ' + error.message);
+    } catch (e) {
+        console.log(e);
     }
 }
-
 
 
 export async function loadColumnsLengthOracle(connectionDetails) {
@@ -298,13 +279,11 @@ export async function loadColumnsLengthOracle(connectionDetails) {
             // Save the columns in localStorage
             localStorage.setItem('lengthOracle', JSON.stringify(response.data));
             return response.data; // Return the columns
-        } else {
-            throw new Error('Errore nel caricamento delle colonne key : Risposta non valida');
         }
-    } catch (error) {
-        // Error handling
-        throw new Error('Errore nel caricamento delle colonne key: ' + error.message);
+    } catch (e) {
+        console.log(e);
     }
+
 }
 
 
@@ -322,12 +301,9 @@ export async function loadColumnsDefaultOracle(connectionDetails) {
             // Save the columns in localStorage
             localStorage.setItem('defaultOracle', JSON.stringify(response.data));
             return response.data; // Return the columns
-        } else {
-            throw new Error('Errore nel caricamento delle colonne default: Risposta non valida');
         }
-    } catch (error) {
-        // Error handling
-        throw new Error('Errore nel caricamento delle colonne default: ' + error.message);
+    } catch (e) {
+        console.log(e);
     }
 }
 
@@ -346,12 +322,14 @@ export async function loadColumnsJoinOracle(connectionDetails) {
             console.log(response.data);
             // Save the columns in localStorage
             localStorage.setItem('availableColumnsJoinOracle', JSON.stringify(response.data));
+            PopUpStore.showPopup(GREEN, SUCCESS, CONNECTION_SUCCESSFUL);
+
             return response.data; // Return the columns
         } else {
-            throw new Error('Errore nel caricamento delle colonne: Risposta non valida');
+            PopUpStore.showPopup(RED, ERROR, JOIN_ERROR)
         }
     } catch (error) {
         // Error handling
-        throw new Error('Errore nel caricamento delle colonne: ' + error.message);
+        PopUpStore.showPopup(RED, ERROR, JOIN_ERROR)
     }
 }

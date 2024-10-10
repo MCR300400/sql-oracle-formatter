@@ -1,16 +1,19 @@
 <template>
   <NavBarComponent/>
+  <PopUpComponent/>
   <router-view></router-view>
 </template>
 
 <script>
 import NavBarComponent from './components/NavBarComponent.vue';
+import PopUpComponent from "./components/PopUpComponent.vue";
 
 
 
 export default {
   name: 'App',
   components: {
+    PopUpComponent,
     NavBarComponent
   }
 }

@@ -40,6 +40,8 @@
 
         <div v-if="availableJoinColumns.length && useLeftJoin">
           <label for="joinColumns">Colonne della Tabella JOIN:</label>
+          <input type="checkbox" id="selectAll" @change="toggleSelectAllJoin" :checked="areAllSelectedJoin" />
+          <label for="selectAll">Seleziona Tutte</label>
           <div class="checkbox-container">
             <div v-for="column in availableJoinColumns" :key="column" class="checkbox-item">
               <input type="checkbox" :value="column" v-model="selectedJoinColumns" :id="'join_' + column"
@@ -54,9 +56,9 @@
           <button @click="addJoinCondition" v-if="useLeftJoin">Aggiungi Condizione</button>
           <div v-for="(condition, index) in joinConditions" :key="index">
             <select v-model="condition.type" @change="updateQuery">
-              <option value="type1">Formato 1</option>
-              <option value="type2">Formato 2</option>
-              <option value="type3">Formato 3</option>
+              <option value="type1">Colonna 1 &lt;,&lt;=,=,&gt;=,&gt; Colonna 2</option>
+              <option value="type2">Colonna 1 &lt;,&lt;=,=,&gt;=,&gt; Valore</option>
+              <option value="type3">Colonna 2 &lt;,&lt;=,=,&gt;=,&gt; Valore</option>
             </select>
 
             <div v-if="condition.type === 'type1'" @change="updateQuery">
@@ -135,6 +137,12 @@ export default {
       joinConditions: [],
     };
   },
+  computed: {
+    areAllSelectedJoin() {
+      return this.selectedJoinColumns.length === this.availableJoinColumns.length;
+    },
+  },
+
   created() {
     const storedColumns = localStorage.getItem('availableColumnsOracle');
     const storedTipo = localStorage.getItem('tipoOracle');
@@ -144,6 +152,9 @@ export default {
     this.resetForm();
   },
   methods: {
+    toggleSelectAllJoin(event) {
+      this.selectedJoinColumns = event.target.checked ? [...this.availableJoinColumns] : [];
+    },
     resetForm() {
       this.newRecord = {};
       this.availableColumns.forEach((column) => {

@@ -42,7 +42,7 @@
           </div>
         </div>
   
-        <button type="submit">Connetti</button>
+        <button type="submit" @click="resetConnectionError">Connetti</button>
         <div v-if="connectionError" style="color: red;">{{ connectionError }}</div>
       </form>
   
@@ -134,6 +134,9 @@
       };
     },
     methods: {
+      resetConnectionError() {
+        this.connectionError = '';
+      },
       connectToDb() {
         // Salva i dati nel localStorage
         localStorage.setItem('urlOracle', this.url);
@@ -167,7 +170,7 @@
               this.columnsAvailable = true; // Imposta la disponibilità delle colonne
               this.$emit('connection-status', true); // Emette l'evento di successo
             } else {
-              throw new Error('Nessuna colonna trovata.');
+              throw new Error('Credenziali ERRATE');
             }
           })
           .catch(error => {
