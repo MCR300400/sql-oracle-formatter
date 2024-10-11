@@ -52,6 +52,14 @@ select {
   border-radius: 0.25rem; /* 4px */
 }
 
+.table-container {
+  max-width: 100%;
+  max-height: 400px; /* Altezza massima */
+  overflow-x: auto; /* Scorrimento orizzontale per larghezza */
+  overflow-y: auto; /* Scorrimento verticale per altezza */
+  margin-bottom: 10px; /* Margine per distanziare dalla paginazione */
+}
+
 /* Stile per i pulsanti */
 button {
   padding: 0.625rem 1.25rem; /* 10px 20px */

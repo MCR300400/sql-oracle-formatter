@@ -68,6 +68,15 @@
           </div>
         </div>
 
+        <!-- Input per i valori da aggiornare -->
+        <div class="input-container">
+          <div v-for="(column, index) in selectedJoinColumns" :key="column" class="input-item">
+            <label>{{ column }}</label>
+            <input type="text" v-model="updateValuesJoin[index]" :id="'value_' + column"
+                   placeholder="undefined" @input="generateUpdateQuery"/>
+          </div>
+        </div>
+
         <!-- Sezione per le condizioni di JOIN -->
         <div v-if="joinTable != null && availableJoinColumns.length">
           <h4>Condizione di JOIN</h4>
@@ -174,7 +183,7 @@ export default {
       selectedUpdateColumns: [],       // Colonne selezionate da aggiornare
       selectedJoinColumns: [],         // Colonne selezionate dalla tabella di JOIN
       updateValues: [],                // Valori da impostare per le colonne selezionate
-      whereCondition: '',              // Condizione WHERE
+      updateValuesJoin: [],
       joinTable: '',                   // Nome della tabella da unire
       useLeftJoin: false,              // Stato per l'uso di LEFT JOIN
       joinCondition: {                // Condizione JOIN semplificata
@@ -239,6 +248,7 @@ export default {
         console.error("Errore durante il caricamento delle colonne di JOIN:", error);
       }
     },
+
     toggleSelectAll(event) {
       this.selectedUpdateColumns = event.target.checked ? [...this.availableColumns] : [];
     },
@@ -246,7 +256,6 @@ export default {
     toggleSelectAllJoin(event) {
       this.selectedJoinColumns = event.target.checked ? [...this.availableJoinColumns] : [];
     },
-
 
     isDisabled(string) {
       if (typeof string !== 'string') {
@@ -270,7 +279,6 @@ export default {
       const index = this.availableColumns.indexOf(column);
       return index !== -1 ? this.listDefault[index] || '' : '';
     },
-
 
     // Funzione per ottenere il valore "null" della colonna selezionata
     getNull(column) {
@@ -299,10 +307,11 @@ export default {
       }
     },
 
-
     generateUpdateQuery() {
       if (this.selectedUpdateColumns.length > 0) {
         let setClauses = this.selectedUpdateColumns.map((col, index) => `t1.${col} = '${this.updateValues[index]}'`).join(', ');
+        let setClausesJoin = this.selectedJoinColumns.map((col, index) => `t2.${col} = '${this.updateValuesJoin[index]}'`).join(', ');
+
         let whereClause = '';
         if (this.whereConditions.length) {
           const whereClauses = this.whereConditions
@@ -315,12 +324,13 @@ export default {
 
         let joinClause = '';
         if (this.useLeftJoin && this.joinTable) {
-          joinClause += ` ${this.tipoJoin} JOIN ${this.joinTable} t2`;
+          joinClause += ` AND EXIST ( SELECT 1 ${this.joinTable} t2`;
           if (this.joinCondition.varT1 && this.joinCondition.varT2) {
-            joinClause += ` ON t1.${this.joinCondition.varT1} ${this.joinCondition.operator} t2.${this.joinCondition.varT2}`;
+            joinClause += ` WHERE  t1.${this.joinCondition.varT1} ${this.joinCondition.operator} t2.${this.joinCondition.varT2}`;
           }
+          joinClause += " )";
         }
-        this.query = `UPDATE ${localStorage.getItem('tableNameOracle')} t1 SET ${setClauses} ${joinClause} ${whereClause}`;
+        this.query = `UPDATE ${localStorage.getItem('tableNameOracle')} t1 SET ${setClauses}, ${setClausesJoin} ${whereClause} ${joinClause} `;
       } else {
         this.query = '';
       }
@@ -349,8 +359,7 @@ export default {
 
     async executeUpdate() {
       // Logica per eseguire la query di aggiornamento
-
-
+      console.log("execute update");
       const response = await updateRecordsOracle({
         url: localStorage.getItem("urlOracle"),
         database: localStorage.getItem("databaseNameOracle"),

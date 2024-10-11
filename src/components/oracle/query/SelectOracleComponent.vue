@@ -400,13 +400,7 @@ export default {
 <style scoped>
 
 
-.table-container {
-  max-width: 100%;
-  max-height: 400px; /* Altezza massima */
-  overflow-x: auto; /* Scorrimento orizzontale per larghezza */
-  overflow-y: auto; /* Scorrimento verticale per altezza */
-  margin-bottom: 10px; /* Margine per distanziare dalla paginazione */
-}
+
 
 
 .search-filter {

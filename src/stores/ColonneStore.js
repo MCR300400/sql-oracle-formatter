@@ -191,7 +191,7 @@ export async function loadColumnsJoin(connectionDetails) {
 
 /**
  *
- *          MYSQL
+ *          ORACLE
  *
  */
 

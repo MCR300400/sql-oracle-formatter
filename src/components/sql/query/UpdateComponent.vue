@@ -28,80 +28,113 @@
         </div>
       </div>
 
-      <!-- Sezione per le condizioni WHERE -->
-      <div v-if="!useLeftJoin">
-        <label for="whereCondition">Condizione WHERE (opzionale):</label>
-        <input type="text" v-model="whereCondition" id="whereCondition" placeholder="es. id = 1"
-          @input="generateUpdateQuery" />
-      </div>
-
       <!-- Checkbox per abilitare il LEFT JOIN -->
       <div>
-        <input type="checkbox" v-model="useLeftJoin" id="useLeftJoin" @change="generateUpdateQuery" />
-        <label for="useLeftJoin">Usa LEFT JOIN</label>
+        <input type="checkbox" v-model="useLeftJoin" id="useLeftJoin" @change="generateUpdateQuery"/>
+        <label for="useLeftJoin">Usa JOIN</label>
       </div>
 
-      <!-- Sezione per il LEFT JOIN -->
+
+
+
+      <!-- Form aggiuntivo per il LEFT JOIN -->
       <div v-if="useLeftJoin">
-        <label for="joinTable">Tabella per LEFT JOIN:</label>
-        <input type="text" v-model="joinTable" id="joinTable" placeholder="Nome della tabella da unire" />
-        <button @click="fetchJoinColumns">Cerca colonne tabella join</button>
-      </div>
-
-      <div v-if="availableJoinColumns.length && useLeftJoin">
-        <label for="joinColumns">Colonne della Tabella JOIN:</label>
-        <div class="checkbox-container">
-          <div v-for="column in availableJoinColumns" :key="column" class="checkbox-item">
-            <input type="checkbox" :value="column" v-model="selectedJoinColumns" :id="'join_' + column"
-              @change="generateUpdateQuery" />
-            <label :for="'join_' + column">{{ column }}</label>
-          </div>
+        <h3>Dettagli JOIN</h3>
+        <div @change="generateUpdateQuery">
+          <label for="tipoJoin">TIPOLOGIA JOIN:</label>
+          <select v-model="tipoJoin" id="tipoJoin">
+            <option disabled value="">Seleziona il tipo del join</option>
+            <option v-for="item in joinList" :key="item.id" :value=item> {{ item }}</option>
+          </select>
         </div>
-      </div>
-      <div>
         <div>
-          <h4 v-if="useLeftJoin">Condizioni di JOIN</h4>
-          <button @click="addJoinCondition" v-if="useLeftJoin">Aggiungi Condizione</button>
-          <div v-for="(condition, index) in joinConditions" :key="index">
-            <select v-model="condition.type" @change="generateUpdateQuery">
-              <option value="type1">Formato 1</option>
-              <option value="type2">Formato 2</option>
-              <option value="type3">Formato 3</option>
-            </select>
+          <label for="joinTable">Nome Tabella per il JOIN:</label>
+          <input type="text" v-model="joinTable" id="joinTable" placeholder="Inserisci nome tabella"/>
+        </div>
+        <button @click="connectToDbJoin" :disabled="!joinTable">Cerca Colonne Join</button>
 
-            <div v-if="condition.type === 'type1'" @change="generateUpdateQuery">
-              <select v-model="condition.varT1">
-                <option v-for="column in selectedUpdateColumns" :key="column" :value="column">{{ column }}</option>
-              </select>
-              <select v-model="condition.operator">
-                <option value="<">&lt;</option>
-                <option value="<=">&lt;=</option>
-                <option value="=">=</option>
-                <option value=">=">&gt;=</option>
-                <option value=">">&gt;</option>
-              </select>
-              <select v-model="condition.varT2">
-                <option v-for="column in selectedJoinColumns" :key="column" :value="column">{{ column }}</option>
-              </select>
+        <!-- Se ci sono colonne della tabella di JOIN disponibili -->
+        <div v-if="availableJoinColumns.length" @change="generateUpdateQuery">
+          <label for="joinColumns">Colonne della Tabella JOIN:</label>
+          <input type="checkbox" id="selectAll" @change="toggleSelectAllJoin" :checked="areAllSelectedJoin"/>
+          <label for="selectAll">Seleziona Tutte</label>
+          <div class="checkbox-container">
+            <div v-for="column in availableJoinColumns" :key="column" class="checkbox-item">
+              <input type="checkbox" :value="column" v-model="selectedJoinColumns" :id="'join_' + column"/>
+              <label :for="'join_' + column">{{ column }}</label>
             </div>
-
-            <div v-if="condition.type === 'type2'" @change="generateUpdateQuery">
-              <select v-model="condition.varT1">
-                <option v-for="column in selectedUpdateColumns" :key="column" :value="column">{{ column }}</option>
-              </select>
-              <input type="text" v-model="condition.valueT1" placeholder="Valore" />
-            </div>
-
-            <div v-if="condition.type === 'type3'" @change="generateUpdateQuery">
-              <select v-model="condition.varT2">
-                <option v-for="column in selectedJoinColumns" :key="column" :value="column">{{ column }}</option>
-              </select>
-              <input type="text" v-model="condition.valueT2" placeholder="Valore" />
-            </div>
-
-            <button @click="removeJoinCondition(index)">Rimuovi Condizione</button>
           </div>
         </div>
+
+        <!-- Input per i valori da aggiornare -->
+        <div class="input-container">
+          <div v-for="(column, index) in selectedJoinColumns" :key="column" class="input-item">
+            <label>{{ column }}</label>
+            <input type="text" v-model="updateValuesJoin[index]" :id="'value_' + column"
+                   placeholder="undefined" @input="generateUpdateQuery"/>
+          </div>
+        </div>
+
+        <!-- Sezione per le condizioni di JOIN -->
+        <div v-if="joinTable != null && availableJoinColumns.length">
+          <h4>Condizione di JOIN</h4>
+          <div class="join-condition">
+            <!-- Condizione semplificata (type1) -->
+            <select v-model="joinCondition.varT1" @change="generateUpdateQuery">
+              <option v-for="column in availableColumns" :key="column" :value="column">{{ column }}</option>
+            </select>
+            <select v-model="joinCondition.operator" @change="generateUpdateQuery">
+              <option value="<">&lt;</option>
+              <option value="<=">&lt;=</option>
+              <option value="=">=</option>
+              <option value=">=">&gt;=</option>
+              <option value=">">&gt;</option>
+            </select>
+            <select v-model="joinCondition.varT2" @change="generateUpdateQuery">
+              <option v-for="column in availableJoinColumns" :key="column" :value="column">{{ column }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Selezione WHERE -->
+      <div>
+        <h3>Condizioni WHERE (opzionali):</h3>
+
+        <div v-for="(condition, index) in whereConditions" :key="index" class="where-condition">
+          <!-- Dropdown per scegliere la tabella (t1 o t2) -->
+          <select v-model="condition.table" @change="generateUpdateQuery">
+            <option value="t1">Tabella Principale (t1)</option>
+            <option value="t2" v-if="useLeftJoin && joinTable">Tabella JOIN (t2)</option>
+          </select>
+
+          <!-- Dropdown per scegliere la colonna -->
+          <select v-if="condition.table === 't1'" v-model="condition.column" @change="generateUpdateQuery">
+            <option v-for="column in availableColumns" :key="column" :value="column">{{ column }}</option>
+          </select>
+          <select v-else v-model="condition.column" @change="generateUpdateQuery">
+            <option v-for="column in availableJoinColumns" :key="column" :value="column">{{ column }}</option>
+          </select>
+
+          <!-- Dropdown per scegliere l'operatore di confronto -->
+          <select v-model="condition.operator" @change="generateUpdateQuery">
+            <option value="=">=</option>
+            <option value="<">&lt;</option>
+            <option value=">">&gt;</option>
+            <option value="<=">&lt;=</option>
+            <option value=">=">&gt;=</option>
+            <option value="!=">!=</option>
+          </select>
+
+          <!-- Input per il valore da confrontare -->
+          <input type="text" v-model="condition.value" placeholder="Inserisci valore" @input="generateUpdateQuery"/>
+
+          <!-- Pulsante per rimuovere la condizione -->
+          <button @click="removeWhereCondition(index)">Rimuovi</button>
+        </div>
+
+        <!-- Pulsante per aggiungere una nuova condizione WHERE -->
+        <button @click="addWhereCondition">Aggiungi Condizione WHERE</button>
       </div>
 
       <!-- Pulsante esecuzione query -->
@@ -124,25 +157,37 @@
 </template>
 
 <script>
-import { loadColumnsJoin } from '../../../stores/ColonneStore.js';
+import {loadColumnsJoin, loadColumnsJoinOracle} from '../../../stores/ColonneStore.js';
 import { updateRecords } from '../../../stores/UpdateStore.js';
 
 export default {
   name: 'UpdateComponent',
-  components: {
-
-  },
+  components: {},
   data() {
     return {
+      tipoJoin: '',
+      joinList: ['', 'LEFT', 'RIGHT'],
       availableColumns: [],            // Colonne della tabella principale
       availableJoinColumns: [],        // Colonne della tabella di JOIN
       selectedUpdateColumns: [],       // Colonne selezionate da aggiornare
       selectedJoinColumns: [],         // Colonne selezionate dalla tabella di JOIN
       updateValues: [],                // Valori da impostare per le colonne selezionate
-      whereCondition: '',              // Condizione WHERE
+      updateValuesJoin: [],
+      whereConditions: [               // Condizioni WHERE dinamiche
+        {
+          table: 't1',                 // Tabella (t1 = principale, t2 = join)
+          column: '',                  // Colonna selezionata
+          operator: '=',               // Operatore di confronto
+          value: '',                   // Valore di confronto
+        }
+      ],
       joinTable: '',                   // Nome della tabella da unire
       useLeftJoin: false,              // Stato per l'uso di LEFT JOIN
-      joinConditions: [],              // Condizioni di JOIN
+      joinCondition: {                // Condizione JOIN semplificata
+        varT1: '',                    // Prima colonna (tabella principale)
+        operator: '=',                // Operatore
+        varT2: ''                     // Seconda colonna (tabella di JOIN)
+      },
       query: '',                       // Query formata
       results: [],                     // Risultati dell'operazione
       resultsMessage: '',
@@ -175,6 +220,11 @@ export default {
       return this.updateValues.length === this.selectedUpdateColumns.length && this.updateValues.every(value => value !== '');
     },
 
+    areAllSelectedJoin() {
+      return this.selectedJoinColumns.length === this.availableJoinColumns.length;
+    },
+
+
 
   },
 
@@ -182,10 +232,29 @@ export default {
 
 
   methods: {
+
+    async connectToDbJoin() {
+      if (!this.joinTable) return;
+      try {
+        const columns = await loadColumnsJoinOracle({
+          url: localStorage.getItem("url"),
+          database: localStorage.getItem("databaseName"),
+          porta: localStorage.getItem("port"),
+          fusoOrario: localStorage.getItem("fusoorario"),
+          tabella: this.joinTable, // Utilizza la tabella di cui è stata caricata la struttura
+          username: localStorage.getItem("usernameDB"),
+          password: localStorage.getItem("passwordDB"),
+        });
+        this.availableJoinColumns = columns;
+        console.log("colonne join disponibili: " + this.availableJoinColumns)
+      } catch (error) {
+        console.error("Errore durante il caricamento delle colonne di JOIN:", error);
+      }
+    },
+
     toggleSelectAll(event) {
       this.selectedUpdateColumns = event.target.checked ? [...this.availableColumns] : [];
     },
-
 
     isDisabled(string) {
       if (typeof string !== 'string') {
@@ -256,26 +325,29 @@ export default {
       }
     },
 
-
     generateUpdateQuery() {
-      if (this.useLeftJoin) {
-        this.whereCondition = '';
-      } else {
-        this.availableJoinColumns = [],
-          this.selectedJoinColumns = [];
-        this.joinConditions = [];
-      }
       if (this.selectedUpdateColumns.length > 0) {
         const setClauses = this.selectedUpdateColumns.map((col, index) => `t1.${col} = '${this.updateValues[index]}'`).join(', ');
-        const whereClause = this.whereCondition ? ` WHERE ${this.whereCondition}` : '';
-
-        let joinClause = '';
-        if (this.useLeftJoin && this.joinTable && this.selectedJoinColumns.length > 0) {
-          const joinConditions = this.joinConditions.map(condition => this.getJoinCondition(condition)).join(' AND ');
-          joinClause = ` LEFT JOIN ${this.joinTable} AS t2 ON ${joinConditions}`;
+        let setClausesJoin = this.selectedJoinColumns.map((col, index) => `t2.${col} = '${this.updateValuesJoin[index]}'`).join(', ');
+        let whereClause = '';
+        if (this.whereConditions.length) {
+          const whereClauses = this.whereConditions
+              .filter(cond => cond.column && cond.value) // Filtro per condizioni valide
+              .map(cond => `${cond.table}.${cond.column} ${cond.operator} ${cond.value}`);
+          if (whereClauses.length) {
+            whereClause += ` WHERE ${whereClauses.join(' AND ')}`;
+          }
         }
 
-        this.query = `UPDATE ${localStorage.getItem('tableName')} AS t1 SET ${setClauses}${joinClause}${whereClause};`;
+        let joinClause = '';
+        if (this.useLeftJoin && this.joinTable) {
+          joinClause += ` AND EXIST ( SELECT 1 ${this.joinTable} t2`;
+          if (this.joinCondition.varT1 && this.joinCondition.varT2) {
+            joinClause += ` WHERE  t1.${this.joinCondition.varT1} ${this.joinCondition.operator} t2.${this.joinCondition.varT2}`;
+          }
+          joinClause += " )";
+        }
+        this.query = `UPDATE ${localStorage.getItem('tableNameOracle')} t1 SET ${setClauses}, ${setClausesJoin} ${whereClause} ${joinClause} `;
       } else {
         this.query = '';
       }
