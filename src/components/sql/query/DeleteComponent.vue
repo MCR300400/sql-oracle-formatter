@@ -57,10 +57,10 @@
 
 import { loadColumnsJoin } from '../../../stores/ColonneStore.js';
 import { deleteRecords } from '../../../stores/DeleteStore.js';
-import ColumnSelection from "@/components/sub/ColumnSelection.vue";
-import JoinSelection from "@/components/sub/JoinSelection.vue";
-import WhereSelection from "@/components/sub/WhereSelection.vue";
-import QueryExecution from "@/components/sub/QueryExecution.vue";
+import ColumnSelection from "@/components/sql/query/sub/ColumnSelection.vue";
+import JoinSelection from "@/components/sql/query/sub/JoinSelection.vue";
+import WhereSelection from "@/components/sql/query/sub/WhereSelection.vue";
+import QueryExecution from "@/components/sql/query/sub/QueryExecution.vue";
 import {selectRecords} from "@/stores/SelectStore";
 
 export default {

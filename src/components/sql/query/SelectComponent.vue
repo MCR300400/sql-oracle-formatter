@@ -66,11 +66,11 @@
 
 import {loadColumnsJoin} from '@/stores/ColonneStore.js';
 import {selectRecords} from '@/stores/SelectStore.js';
-import ColumnSelection from "@/components/sub/ColumnSelection.vue";
-import JoinSelection from "@/components/sub/JoinSelection.vue";
-import WhereSelection from "@/components/sub/WhereSelection.vue";
-import QueryExecution from "@/components/sub/QueryExecution.vue";
-import DataTable from "@/components/sub/DataTable.vue";
+import ColumnSelection from "@/components/sql/query/sub/ColumnSelection.vue";
+import JoinSelection from "@/components/sql/query/sub/JoinSelection.vue";
+import WhereSelection from "@/components/sql/query/sub/WhereSelection.vue";
+import QueryExecution from "@/components/sql/query/sub/QueryExecution.vue";
+import DataTable from "@/components/sql/query/sub/DataTable.vue";
 
 export default {
   name: 'SelectComponent',
