@@ -1,25 +1,12 @@
 <template>
   <div>
     <h3>Elimina Record</h3>
-    <div v-if="!availableColumns.length">Caricamento delle colonne...</div>
-    <div v-else>
-      <!-- Selezione delle colonne della prima tabella -->
-      <ColumnSelection
-          :availableColumns="availableColumns"
-          :selectedColumns="selectedColumns"
-          @update:selectedColumns="updateSelectedColumns"
-          @updateQuery="updateQuery"
-      />
 
-      <!-- Selezione LEFT JOIN -->
-      <div @change="updateQuery">
-        <label for="leftJoin">Vuoi fare un LEFT JOIN?</label>
-        <input type="checkbox" v-model="useLeftJoin" id="leftJoin" @change="updateJoinVisibility" />
-      </div>
+
 
 
       <!-- Selezione LEFT JOIN -->
-      <JoinSelection
+      <OnlyJoinConnection
           :joins="joins"
           :availableColumns="availableColumns"
           :useLeftJoin="useLeftJoin"
@@ -41,7 +28,7 @@
           :joinTable="joinTable"
           @update-query="updateQuery"
       />
-      </div>
+
 
     <!-- Query Execution Component -->
     <QueryExecution
@@ -49,23 +36,23 @@
         :query="currentQuery"
         @execute-query="executeQuery"
     />
+
   </div>
 </template>
 
 
 <script>
 
-import { loadColumnsJoin } from '../../../stores/ColonneStore.js';
-import { deleteRecords } from '../../../stores/DeleteStore.js';
-import ColumnSelection from "@/components/sql/query/sub/ColumnSelection.vue";
-import JoinSelection from "@/components/sql/query/sub/JoinSelection.vue";
+import { loadColumnsJoin } from '@/stores/ColonneStore.js';
+import { deleteRecords } from '@/stores/DeleteStore.js';
 import WhereSelection from "@/components/sql/query/sub/WhereSelection.vue";
 import QueryExecution from "@/components/sql/query/sub/QueryExecution.vue";
 import {selectRecords} from "@/stores/SelectStore";
+import OnlyJoinConnection from "@/components/sql/query/sub/OnlyJoinConnection.vue";
 
 export default {
   name: 'DeleteComponent',
-  components: {QueryExecution, WhereSelection, JoinSelection, ColumnSelection},
+  components: {OnlyJoinConnection, QueryExecution, WhereSelection},
   data() {
     return {
       isUpdatingQuery: false,
@@ -120,6 +107,7 @@ export default {
   created() {
     const storedColumns = localStorage.getItem('availableColumns');
     this.availableColumns = storedColumns ? JSON.parse(storedColumns) : [];
+    this.updateQuery();
   },
   computed: {
     currentQuery() {

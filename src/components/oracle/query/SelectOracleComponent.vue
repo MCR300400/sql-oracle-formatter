@@ -6,7 +6,7 @@
       <ColumnSelection
           :availableColumns="availableColumns"
           :selectedColumns="selectedColumns"
-          @update:selectedColumns="updateSelectedColumns"
+          @selectedColumns="updateSelectedColumns"
           @updateQuery="updateQuery"
       />
 
@@ -183,7 +183,10 @@ export default {
   },
 
   methods: {
-
+    handleJoinsUpdate(updatedJoins) {
+      this.joins = updatedJoins;
+      this.updateQuery(); // Aggiorna la query se necessario
+    },
     filterData() {
       this.currentPage = 1; // Resetta la pagina quando si applica un filtro
     },
@@ -197,13 +200,9 @@ export default {
         this.currentPage--;
       }
     },
-
-
     toggleSelectAllJoin(event) {
       this.selectedJoinColumns = event.target.checked ? [...this.availableJoinColumns] : [];
     },
-
-
     updateQuery() {
 
       let query = "SELECT " + this.selectedColumns.map(column => 't1.' + column).join(', ');
@@ -241,11 +240,9 @@ export default {
 
       this.query = query;
     },
-
     updateSelectedColumns(newColumns) {
       this.selectedColumns = newColumns; // Update the selected columns based on child component's selection
     },
-
     async executeQuery() {
 
       console.log('Esecuzione della query:', this.query);
@@ -331,3 +328,18 @@ td {
   padding: 8px;
 }
 </style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

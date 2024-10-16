@@ -34,7 +34,7 @@
 </template>
 
 <script>
-import { insertRecords } from '../../../stores/InsertStore.js'; // Supponendo che questa funzione gestisca l'inserimento
+import { insertRecords } from '@/stores/InsertStore.js'; // Supponendo che questa funzione gestisca l'inserimento
 
 export default {
   name: 'InsertComponent',

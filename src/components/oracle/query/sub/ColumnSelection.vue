@@ -43,7 +43,8 @@ export default {
       this.emitSelection(); // Emit the selection change
     },
     emitSelection() {
-      this.$emit('update:selectedColumns', this.localSelectedColumns); // Emit the new selection
+      console.log("selectedcolumns e updatequery");
+      this.$emit('selectedColumns', this.localSelectedColumns); // Emit the new selection
       this.$emit('updateQuery'); // Emit an event to update the query
     },
   },

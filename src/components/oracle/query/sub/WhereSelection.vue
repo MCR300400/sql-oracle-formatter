@@ -5,7 +5,7 @@
       <!-- Dropdown per scegliere la tabella (t1 o t2) -->
       <select v-model="condition.table" @change="updateQuerySub">
         <option value="t1">Tabella Principale (t1)</option>
-        <option value="t2" v-if="useLeftJoin && joinTable">Tabella JOIN (t2)</option>
+
       </select>
 
       <!-- Dropdown per scegliere la colonna -->

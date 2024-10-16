@@ -4,7 +4,7 @@
     <div v-if="!availableColumns.length">Caricamento delle colonne...</div>
     <div v-else>
       <!-- Form di Inserimento -->
-      <form @submit.prevent="executeInsert">
+      <form @submit.prevent="executeQuery">
         <div class="form-row">
           <div v-for="column in availableColumns" :key="column" class="form-group">
             <label :for="column">{{ column }}</label>
@@ -18,118 +18,33 @@
           </div>
         </div>
 
-        <!-- Checkbox per abilitare il LEFT JOIN -->
-        <div>
-          <input type="checkbox" v-model="useLeftJoin" id="useLeftJoin" @change="generateUpdateQuery"/>
-          <label for="useLeftJoin">Usa JOIN</label>
-        </div>
+
+        <!-- Selezione LEFT JOIN -->
+        <OnlyJoinConnection
+            :joins="joins"
+            :availableColumns="availableColumns"
+            :useLeftJoin="useLeftJoin"
+            :joinList="joinList"
+            :updateQuery="updateQuery"
+            :addJoin="addJoin"
+            :toggleSelectAllJoin="toggleSelectAllJoin"
+            :areAllSelectedJoin="areAllSelectedJoin"
+            @update:joins="handleJoinsUpdate"
+        />
 
 
-        <!-- Form aggiuntivo per il LEFT JOIN -->
-        <div v-if="useLeftJoin">
-          <h3>Dettagli JOIN</h3>
-          <div @change="generateUpdateQuery">
-            <label for="tipoJoin">TIPOLOGIA JOIN:</label>
-            <select v-model="tipoJoin" id="tipoJoin">
-              <option disabled value="">Seleziona il tipo del join</option>
-              <option v-for="item in joinList" :key="item.id" :value=item> {{ item }}</option>
-            </select>
-          </div>
-          <div>
-            <label for="joinTable">Nome Tabella per il JOIN:</label>
-            <input type="text" v-model="joinTable" id="joinTable" placeholder="Inserisci nome tabella"/>
-          </div>
-          <button @click="connectToDbJoin" :disabled="!joinTable">Cerca Colonne Join</button>
 
-          <!-- Se ci sono colonne della tabella di JOIN disponibili -->
-          <div v-if="availableJoinColumns.length" @change="generateUpdateQuery">
-            <label for="joinColumns">Colonne della Tabella JOIN:</label>
-            <input type="checkbox" id="selectAll" @change="toggleSelectAllJoin" :checked="areAllSelectedJoin"/>
-            <label for="selectAll">Seleziona Tutte</label>
-            <div class="checkbox-container">
-              <div v-for="column in availableJoinColumns" :key="column" class="checkbox-item">
-                <input type="checkbox" :value="column" v-model="selectedJoinColumns" :id="'join_' + column"/>
-                <label :for="'join_' + column">{{ column }}</label>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sezione per le condizioni di JOIN -->
-          <div v-if="joinTable != null && availableJoinColumns.length">
-            <h4>Condizione di JOIN</h4>
-            <div class="join-condition">
-              <!-- Condizione semplificata (type1) -->
-              <select v-model="joinCondition.varT1" @change="generateUpdateQuery">
-                <option v-for="column in availableColumns" :key="column" :value="column">{{ column }}</option>
-              </select>
-              <select v-model="joinCondition.operator" @change="generateUpdateQuery">
-                <option value="<">&lt;</option>
-                <option value="<=">&lt;=</option>
-                <option value="=">=</option>
-                <option value=">=">&gt;=</option>
-                <option value=">">&gt;</option>
-              </select>
-              <select v-model="joinCondition.varT2" @change="generateUpdateQuery">
-                <option v-for="column in availableJoinColumns" :key="column" :value="column">{{ column }}</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Selezione WHERE -->
-        <div>
-          <h3>Condizioni WHERE (opzionali):</h3>
-
-          <div v-for="(condition, index) in whereConditions" :key="index" class="where-condition">
-            <!-- Dropdown per scegliere la tabella (t1 o t2) -->
-            <select v-model="condition.table" @change="generateUpdateQuery">
-              <option value="t1">Tabella Principale (t1)</option>
-              <option value="t2" v-if="useLeftJoin && joinTable">Tabella JOIN (t2)</option>
-            </select>
-
-            <!-- Dropdown per scegliere la colonna -->
-            <select v-if="condition.table === 't1'" v-model="condition.column" @change="generateUpdateQuery">
-              <option v-for="column in availableColumns" :key="column" :value="column">{{ column }}</option>
-            </select>
-            <select v-else v-model="condition.column" @change="generateUpdateQuery">
-              <option v-for="column in availableJoinColumns" :key="column" :value="column">{{ column }}</option>
-            </select>
-
-            <!-- Dropdown per scegliere l'operatore di confronto -->
-            <select v-model="condition.operator" @change="generateUpdateQuery">
-              <option value="=">=</option>
-              <option value="<">&lt;</option>
-              <option value=">">&gt;</option>
-              <option value="<=">&lt;=</option>
-              <option value=">=">&gt;=</option>
-              <option value="!=">!=</option>
-            </select>
-
-            <!-- Input per il valore da confrontare -->
-            <input type="text" v-model="condition.value" placeholder="Inserisci valore" @input="generateUpdateQuery"/>
-
-            <!-- Pulsante per rimuovere la condizione -->
-            <button @click="removeWhereCondition(index)">Rimuovi</button>
-          </div>
-
-          <!-- Pulsante per aggiungere una nuova condizione WHERE -->
-          <button @click="addWhereCondition">Aggiungi Condizione WHERE</button>
-        </div>
 
 
         <!-- Query generata -->
-        <div v-if="generatedQuery">
+        <div v-if="query">
           <h3>Query Generata</h3>
-          <pre>{{ generatedQuery }}</pre>
+          <pre>{{ currentQuery }}</pre>
         </div>
 
         <button type="submit">Inserisci Record</button>
       </form>
 
-      <div v-if="results">
-        <h3>Risultati Inserimento</h3>
-        <p>{{ results }}</p>
-      </div>
     </div>
   </div>
 </template>
@@ -138,11 +53,32 @@
 <script>
 import {insertRecordsOracle} from '@/stores/InsertStore';
 import {loadColumnsJoinOracle} from '@/stores/ColonneStore';
+import OnlyJoinConnection from "@/components/oracle/query/sub/OnlyJoinConnection.vue";
 
 export default {
   name: 'InsertComponent',
+  components: {OnlyJoinConnection},
   data() {
     return {
+      isUpdatingQuery: false,
+      joins: [   // Array per gestire più join
+        {
+          useLeftJoin: false,
+          joinTable: '',
+          tipoJoin: '',
+          availableJoinColumns: [],
+          selectedJoinColumns: [],
+          joinConditions: [ // Cambia da joinCondition a joinConditions
+            {
+              varT1: '',
+              operator: '=',
+              varT2: ''
+            }
+          ]
+        }
+      ],
+      availableColumns: [],            // Colonne della tabella principale
+      selectedColumns: [],             // Colonne selezionate dalla tabella principale
       whereConditions: [               // Condizioni WHERE dinamiche
         {
           table: 't1',                 // Tabella (t1 = principale, t2 = join)
@@ -151,26 +87,85 @@ export default {
           value: '',                   // Valore di confronto
         }
       ],
-      availableColumns: [],
-      newRecord: {},
-      results: null,
-      generatedQuery: '',
+      results: [],                     // Risultati della query
+      query: '',                       // Query formata
+      useLeftJoin: false,              // Se usare o no il LEFT JOIN
+      joinTable: '',                   // Nome della tabella per il JOIN
+      availableJoinColumns: [],        // Colonne della tabella di JOIN
+      selectedJoinColumns: [],         // Colonne selezionate dalla tabella di JOIN
+      connectionError: '',             // Errore di connessione (se presente)
+      joinConditions: [{  // Changed this to hold multiple conditions
+        varT1: '',
+        operator: '=',
+        varT2: ''
+      }],
+      bodyData: [],
+      tipoJoin: '',
       joinList: ['', 'LEFT', 'RIGHT'],
-      listTipo: [],
-      useLeftJoin: false,
-      joinTable: '',
-      availableJoinColumns: [],
-      selectedJoinColumns: [],
-      joinCondition: {                // Condizione JOIN semplificata
-        varT1: '',                    // Prima colonna (tabella principale)
-        operator: '=',                // Operatore
-        varT2: ''                     // Seconda colonna (tabella di JOIN)
-      },
+      searchValue: '',
+      selectedColumn: '',
+      currentPage: 1,
+      itemsPerPage: 100,
     };
   },
   computed: {
+    currentQuery() {
+      console.log("current query");
+      return this.query; // Returns the current query value
+    },
+    filteredData() {
+      if (this.searchValue && this.selectedColumn) {
+        return this.bodyData.filter(row =>
+            String(row[this.selectedColumn])
+                .toLowerCase()
+                .includes(this.searchValue.toLowerCase())
+        );
+      }
+      return this.bodyData;
+    },
+    paginatedData() {
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      const end = start + this.itemsPerPage;
+      return this.filteredData.slice(start, end);
+    },
+    totalPages() {
+      return Math.ceil(this.filteredData.length / this.itemsPerPage);
+    },
+
+    areAllSelected() {
+      return this.selectedColumns.length === this.availableColumns.length;
+    },
+
+
     areAllSelectedJoin() {
-      return this.selectedJoinColumns.length === this.availableJoinColumns.length;
+      return (index) => {
+
+
+        if (typeof index !== 'number' || index < 0 || index >= this.joins.length) {
+          console.error("Indice non valido:", index);
+          return false;
+        }
+
+        const join = this.joins[index];
+
+        if (!join || !join.selectedJoinColumns || !join.availableJoinColumns) {
+          console.error("Join non definito o proprietà mancanti:", join);
+          return false;
+        }
+
+        if (!Array.isArray(join.selectedJoinColumns) || !Array.isArray(join.availableJoinColumns)) {
+          console.error("Proprietà mancanti o non sono array:", join);
+          return false;
+        }
+
+        return join.selectedJoinColumns.length === join.availableJoinColumns.length;
+      };
+    },
+
+    allSelectedColumns() {
+      const formattedMainColumns = this.selectedColumns.map(col => `t1.${col}`);
+      const formattedJoinColumns = this.selectedJoinColumns.map(col => `t2.${col}`);
+      return [...formattedMainColumns, ...formattedJoinColumns];
     },
   },
 
@@ -183,9 +178,16 @@ export default {
     this.resetForm();
   },
   methods: {
+    handleJoinsUpdate(updatedJoins) {
+      this.joins = updatedJoins;
+      this.updateQuery(); // Aggiorna la query se necessario
+    },
+
     toggleSelectAllJoin(event) {
       this.selectedJoinColumns = event.target.checked ? [...this.availableJoinColumns] : [];
     },
+
+
     resetForm() {
       this.newRecord = {};
       this.availableColumns.forEach((column) => {
@@ -289,29 +291,32 @@ export default {
         const value = this.newRecord[column];
         return this.listTipo[this.availableColumns.indexOf(column)] === 'VARCHAR2' || this.listTipo[this.availableColumns.indexOf(column)] === 'TEXT'
             ? `'${value}'`
-            : value;
+            : this.listTipo[this.availableColumns.indexOf(column)] === 'DATE'
+                ? `TO_DATE('${value}', 'YYYY-MM-DD 00:00:00')`
+                : value;
+
       });
 
       let query = `INSERT INTO ${localStorage.getItem('tableNameOracle')} t1 (${filteredColumns.join(', ')}) VALUES (${filteredValues.join(', ')})`;
+      this.joins.forEach((join, index) => {
+        if (join.joinTable) {
+          query += ` ${join.tipoJoin} JOIN ${join.joinTable} t${index + 2}`;
+          if (join.joinConditions && Array.isArray(join.joinConditions)) {
+            console.log("join.joinConditions: " + join.joinConditions);
+            const joinConditions = join.joinConditions
+                .filter(cond => cond.varT1 && cond.varT2)
+                .map(cond => `t1.${cond.varT1} ${cond.operator} t${index + 2}.${cond.varT2}`);
 
-      if (this.useLeftJoin && this.joinTable) {
-        query += ` ${this.tipoJoin} JOIN ${this.joinTable} t2`;
-        if (this.joinCondition.varT1 && this.joinCondition.varT2) {
-          query += ` ON t1.${this.joinCondition.varT1} ${this.joinCondition.operator} t2.${this.joinCondition.varT2}`;
+            if (joinConditions.length) {
+              query += ` ON ${joinConditions.join(' AND ')}`; // Utilizza AND per unire le condizioni
+            }
+          }
         }
-      }
+      });
 
-      // Aggiungi le condizioni WHERE
-      if (this.whereConditions.length) {
-        const whereClauses = this.whereConditions
-            .filter(cond => cond.column && cond.value) // Filtro per condizioni valide
-            .map(cond => `${cond.table}.${cond.column} ${cond.operator} ${cond.value}`);
-        if (whereClauses.length) {
-          query += ` WHERE ${whereClauses.join(' AND ')}`;
-        }
-      }
 
-      this.generatedQuery = query;
+
+      this.query = query;
     },
 
     getJoinCondition(condition) {
@@ -324,11 +329,11 @@ export default {
       }
     },
 
-    async executeInsert() {
+    async executeQuery() {
       const query = this.generatedQuery;
       if (!query) return;
 
-      console.log('Esecuzione della query:', this.generatedQuery);
+      console.log('Esecuzione della query:', this.query);
 
       try {
         const response = await insertRecordsOracle({
@@ -339,8 +344,12 @@ export default {
           tabella: this.joinTable,
           username: localStorage.getItem("usernameDBOracle"),
           password: localStorage.getItem("passwordDBOracle")
-        }, this.generatedQuery);
-        this.results = response;
+        }, this.query);
+        console.log(response)
+
+        this.bodyData = response
+
+        console.log("dopo bodydata")
       } catch (error) {
         console.error('Errore durante l\'inserimento:', error);
         this.results = 'Errore durante l\'inserimento dei dati';
