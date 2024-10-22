@@ -3,20 +3,19 @@
     <h1>Automazioni Database</h1>
     <DbOracleConnectionComponent @connection-status="handleConnectionStatus" />
     <QueryOracleExecutionComponent v-if="isConnected" :key="queryExecutionKey" />
-    <EmailOracleSenderComponent />
+
   </div>
 </template>
 
 <script>
 import DbOracleConnectionComponent from '@/components/oracle/DbOracleConnectionComponent.vue';
 import QueryOracleExecutionComponent from '@/components/oracle/QueryOracleExecutionComponent.vue';
-import EmailOracleSenderComponent from "@/components/oracle/EmailOracleSenderComponent.vue";
 
 
 export default {
   name: 'HomeOracleView',
   components: {
-    EmailOracleSenderComponent,
+
     DbOracleConnectionComponent,
     QueryOracleExecutionComponent
   },

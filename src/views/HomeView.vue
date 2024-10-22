@@ -3,13 +3,12 @@
     <h1>Automazioni Database</h1>
     <DbConnectionComponent @connection-status="handleConnectionStatus" />
     <QueryexecutionComponent v-if="isConnected" :key="queryExecutionKey" />
-    <EmailSenderComponent />
+
   </div>
 </template>
 
 <script>
 import DbConnectionComponent from '@/components/sql/DbConnectionComponent.vue';
-import EmailSenderComponent from '../components/sql/EmailSenderComponent.vue';
 import QueryexecutionComponent from '../components/sql/QueryExecutionComponent.vue';
 
 export default {
@@ -17,7 +16,7 @@ export default {
   components: {
     DbConnectionComponent,
     QueryexecutionComponent,
-    EmailSenderComponent
+
   },
   data() {
     return {
